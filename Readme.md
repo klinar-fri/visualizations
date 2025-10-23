@@ -1,8 +1,8 @@
 # Visualization of Berzier Curves in Raylib
 - Quadratic berzier curves:
-    Curves made from 3 points, (a, b, c). <br>
+    Curves made from 3 points, `(a, b, c)`. <br>
     Using the "lerp" function to calculate the points that make up the curve.<br>
-    Lerp is defined as follows: Lerp(a,b,t) = (b - a)*t + a; <br>
+    Lerp is defined as follows: `Lerp(a,b,t) = (b - a)*t + a;` <br>
     Where a and b are the two points and t is a kinda offset from 0 to n. <br>
     We get the point on the line after three operations:
     - `p1 = Lerp(a,b,t) = (b - a)*t + a;`
