@@ -8,4 +8,4 @@
     - `p2 = Lerp(b,c,t) = (c - b)*t + b;`
     - `point = Lerp(p1, p2, t);` <br>
     To get more of them, we change the t offset, which is calculated via this formula:
-    - `t = i / n` - where n is the number of points we want to display from a to c. <br>
+    - `t = i / n` - where n is the number of points we want to display from a to c.<br>

@@ -35,7 +35,8 @@ void displayPoints(){
 
 }
 
-void displayCurves(){
+void displayQuadraticCurves(){
+    DrawTextEx(GetFontDefault(), "QUADRATIC CURVES", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
     for(size_t i = 0; i + 2 < points.size(); i += 2){
         Vector2 p1 = points[i];
@@ -51,6 +52,27 @@ void displayCurves(){
     }
 }
 
+
+void displayQubicCurves(){
+    DrawTextEx(GetFontDefault(), "CUBIC CURVES", {10, 10}, 20, 2, RAYWHITE);
+    int n = 20;
+    for(size_t i = 0; i + 3 < points.size(); i += 3){
+        Vector2 p1 = points[i];
+        Vector2 p2 = points[i + 1];
+        Vector2 p3 = points[i + 2];
+        Vector2 p4 = points[i + 3];
+        for(int j = 0; j <= n; j++){
+            float t = (float) j / n;
+            Vector2 pos1 = Vector2Lerp(Vector2Lerp(p1, p2, t), Vector2Lerp(p2, p3, t), t);
+            Vector2 pos2 = Vector2Lerp(Vector2Lerp(p2, p3, t), Vector2Lerp(p3, p4, t), t);
+            Vector2 finalPoint = Vector2Lerp(pos1, pos2, t);
+            Vector2 size = {10, 10};
+            finalPoint = Vector2Subtract(finalPoint, Vector2Scale(size, 0.5));
+            DrawRectangleV(finalPoint, size, BLUE);
+        }
+    }
+}
+
 int main(){
 
     int windowWidth = 800;
@@ -60,15 +82,38 @@ int main(){
     InitWindow(windowWidth, windowHeight, "berzier curves");
     SetTargetFPS(60);
 
+    bool showQuadraticCurves = false;
+    bool showQubicCurves = false;
+
     while(!WindowShouldClose()){
         // F1 to clear the screen
         if(IsKeyPressed(KEY_F1)){
             points.clear();
+            showQuadraticCurves = false;
+            showQubicCurves = false;
+        }
+        if(IsKeyPressed(KEY_F2)){
+            showQuadraticCurves = !showQuadraticCurves;
+            showQubicCurves = false;
+        }
+        if(IsKeyPressed(KEY_F3)){
+            showQuadraticCurves = false;
+            showQubicCurves = !showQubicCurves;
+        }
+        // undo last placement
+        if(IsKeyPressed(KEY_U)){
+            if(points.size() > 0){
+                points.erase(points.end());
+            }
         }
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
             displayPoints();
-            displayCurves();
+            if(showQuadraticCurves){
+                displayQuadraticCurves();
+            }else if(showQubicCurves){
+                displayQubicCurves();
+            }
         EndDrawing();
     }
 
