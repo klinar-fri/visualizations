@@ -73,6 +73,17 @@ void displayQubicCurves(){
     }
 }
 
+void displayHelp(){
+    Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
+    const char* str = "[mouse] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[U] - undo point placement\n[H] - hide help";
+    DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
+}
+void displayH(){
+    const char* str = "[H] - help";
+    Vector2 strSize = MeasureTextEx(GetFontDefault(), str, 10, 2);
+    DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
+}
+
 int main(){
 
     int windowWidth = 800;
@@ -84,6 +95,7 @@ int main(){
 
     bool showQuadraticCurves = false;
     bool showQubicCurves = false;
+    bool showHelp = false;
 
     while(!WindowShouldClose()){
         // F1 to clear the screen
@@ -106,6 +118,10 @@ int main(){
                 points.erase(points.end());
             }
         }
+        // help
+        if(IsKeyPressed(KEY_H)){
+            showHelp = !showHelp;
+        }
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
             displayPoints();
@@ -113,6 +129,11 @@ int main(){
                 displayQuadraticCurves();
             }else if(showQubicCurves){
                 displayQubicCurves();
+            }
+            if(showHelp){
+                displayHelp();
+            }else{
+                displayH();
             }
         EndDrawing();
     }
