@@ -3,12 +3,26 @@
 #include <vector>
 using namespace std;
 
-
 vector<Vector2> points;
 int pointDragging = -1;
 
+int heightFactor = 4;
+int widthFactor = 3;
+int windowSize = 200;
+
+int windowHeight = heightFactor * windowSize;
+int windowWidth = widthFactor * windowSize;
+
+int gridFactor = 10;
+int gridWidth = gridFactor * widthFactor;
+int gridHeight = gridFactor * heightFactor;
+
+int cellWidth = windowWidth / gridWidth;
+int cellHeight = windowHeight / gridHeight;
+
 void displayPoints(){
     Vector2 mouse = GetMousePosition();
+    int newPointToDrag = -1;
 
     for(size_t i = 0; i < points.size(); i++){
         Vector2 size = {20, 20};
@@ -16,18 +30,25 @@ void displayPoints(){
         position = Vector2Subtract(position, Vector2Scale(size, 0.5));
         bool hover = CheckCollisionPointRec(mouse, (Rectangle) {position.x, position.y, size.x, size.y});
 
-        if(hover){
-            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) pointDragging = i;
-        }else{
-            if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) pointDragging = -1;
+        if(hover && (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))){
+            newPointToDrag = i;
         }
-        DrawRectangleV(position, size, hover ? PURPLE : RED);
+        DrawRectangleV(position, size, hover ? BLUE : RED);
 
+    }
+
+    if (pointDragging == -1 && newPointToDrag != -1) {
+        pointDragging = newPointToDrag;
     }
 
     if(pointDragging >= 0){
         points[pointDragging] = mouse;
-    }else{
+        
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            pointDragging = -1;
+        }
+    } 
+    else { 
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             points.push_back(mouse);
         }
@@ -75,27 +96,35 @@ void displayQubicCurves(){
 
 void displayHelp(){
     Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
-    const char* str = "[mouse] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[U] - undo point placement\n[H] - hide help";
+    const char* str = "[LEFT mb] - click to add points\n[RIGHT mb] - connect line\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[H] - hide help";
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
+
 void displayH(){
     const char* str = "[H] - help";
     Vector2 strSize = MeasureTextEx(GetFontDefault(), str, 10, 2);
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
 
+void displayFilledCurves(){
+    for(int i = 0; i < gridHeight; i++){
+        for(int j = 0; j < gridWidth; j++){
+            DrawRectangle(i*cellWidth, j*cellHeight, cellWidth, cellHeight, (i+j)%2 ? RED : BLACK);
+        }
+    }
+}
+
 int main(){
 
-    int windowWidth = 800;
-    int windowHeight = 600;
-
     SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE | FLAG_WINDOW_UNDECORATED);
-    InitWindow(windowWidth, windowHeight, "berzier curves");
+    InitWindow(windowHeight, windowWidth, "berzier curves");
     SetTargetFPS(60);
 
     bool showQuadraticCurves = false;
     bool showQubicCurves = false;
     bool showHelp = false;
+    bool showAreaWithinQuadratic = false;
+
 
     while(!WindowShouldClose()){
         // F1 to clear the screen
@@ -112,6 +141,9 @@ int main(){
             showQuadraticCurves = false;
             showQubicCurves = !showQubicCurves;
         }
+        if(IsKeyPressed(KEY_F4)){
+            showAreaWithinQuadratic = !showAreaWithinQuadratic;
+        }
         // undo last placement
         if(IsKeyPressed(KEY_U)){
             if(points.size() > 0){
@@ -124,6 +156,9 @@ int main(){
         }
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
+            if(showAreaWithinQuadratic){
+                displayFilledCurves();
+            }
             displayPoints();
             if(showQuadraticCurves){
                 displayQuadraticCurves();

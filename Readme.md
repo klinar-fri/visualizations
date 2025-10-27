@@ -9,7 +9,7 @@
     - $P_t = f(l_1,l_2,t)$ 
 
     $P_t$ is then one of points on the curve. We change $t$ according to
-    how many points we want. <br> Since t must be between $0$ and $1$, we calculate it like this:<br>
+    how many points we want. <br> Since $t$ must be between $0$ and $1$, we calculate it like this:<br>
     $t = \frac i n$ where $i$ is the index of the selected point we want to display.    
 
 - ### Qubic berzier curve:<br>
