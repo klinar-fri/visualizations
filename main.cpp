@@ -6,19 +6,23 @@ using namespace std;
 vector<Vector2> points;
 int pointDragging = -1;
 
-int heightFactor = 4;
-int widthFactor = 3;
-int windowSize = 200;
+// aspect ratio 4:3
+constexpr int heightFactor = 4;
+constexpr int widthFactor = 3;
+constexpr int windowSize = 200;
 
-int windowHeight = heightFactor * windowSize;
-int windowWidth = widthFactor * windowSize;
+constexpr int windowHeight = heightFactor * windowSize;
+constexpr int windowWidth = widthFactor * windowSize;
 
-int gridFactor = 10;
-int gridWidth = gridFactor * widthFactor;
-int gridHeight = gridFactor * heightFactor;
+// grid size
+constexpr int gridFactor = 20;
+constexpr int gridWidth = gridFactor * widthFactor;
+constexpr int gridHeight = gridFactor * heightFactor;
 
-int cellWidth = windowWidth / gridWidth;
-int cellHeight = windowHeight / gridHeight;
+constexpr int cellWidth = windowWidth / gridWidth;
+constexpr int cellHeight = windowHeight / gridHeight;
+
+bool grid[gridHeight][gridWidth] = {0};
 
 void displayPoints(){
     Vector2 mouse = GetMousePosition();
@@ -56,6 +60,13 @@ void displayPoints(){
 
 }
 
+void fillTable(Vector2 position){
+    for(int y = 0; y < gridHeight; y++){
+        for(int x = 0; x < gridWidth; x++){
+        }
+    }
+}
+
 void displayQuadraticCurves(){
     DrawTextEx(GetFontDefault(), "QUADRATIC CURVES", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
@@ -68,6 +79,7 @@ void displayQuadraticCurves(){
             Vector2 position = Vector2Lerp(Vector2Lerp(p1, p2, t), Vector2Lerp(p2, p3, t), t);
             Vector2 size = {10, 10};
             position = Vector2Subtract(position, Vector2Scale(size, 0.5));
+            fillTable(position);
             DrawRectangleV(position, size, BLUE);
         }
     }
@@ -109,7 +121,14 @@ void displayH(){
 void displayFilledCurves(){
     for(int i = 0; i < gridHeight; i++){
         for(int j = 0; j < gridWidth; j++){
-            DrawRectangle(i*cellWidth, j*cellHeight, cellWidth, cellHeight, (i+j)%2 ? RED : BLACK);
+            if(grid[i][j]){
+                Vector2 markerPosition = {(float)i*cellWidth, (float)j*cellHeight};
+                Vector2 cellSize = {(float)cellWidth, (float)cellHeight};
+                Vector2 markerSize = Vector2Scale(cellSize, 0.4);
+                markerPosition = Vector2Add(markerPosition, Vector2Scale(cellSize, 0.5));
+                markerPosition = Vector2Subtract(markerPosition, Vector2Scale(markerSize, 0.5));
+                DrawRectangleV(markerPosition, markerSize, RED);
+            }
         }
     }
 }
@@ -124,7 +143,6 @@ int main(){
     bool showQubicCurves = false;
     bool showHelp = false;
     bool showAreaWithinQuadratic = false;
-
 
     while(!WindowShouldClose()){
         // F1 to clear the screen
