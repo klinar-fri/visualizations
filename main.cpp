@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -44,28 +45,39 @@ void displayPoints(){
     if (pointDragging == -1 && newPointToDrag != -1) {
         pointDragging = newPointToDrag;
     }
+    // Stop dragging: If a point is being dragged and the mouse button is released
+    if (pointDragging >= 0 && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+        pointDragging = -1;
+    }
 
     if(pointDragging >= 0){
         points[pointDragging] = mouse;
-        
-        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            pointDragging = -1;
+        Vector2 size = {20, 20};
+
+        Rectangle draggedPoint = {points[pointDragging].x - size.x / 2, points[pointDragging].y - size.y / 2, size.x, size.y};
+
+        for(size_t j = 0; j < points.size(); j++){
+            if((size_t)pointDragging == j){
+                continue;
+            }
+
+            Rectangle otherRec = {points[j].x - size.x/2, points[j].y - size.y / 2, size.x, size.y};
+            
+            if(CheckCollisionRecs(draggedPoint, otherRec)){
+                points[pointDragging] = points[j];
+                break;
+            }
         }
-    } 
-    else { 
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+
+    } else { 
+        if(newPointToDrag == -1 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
             points.push_back(mouse);
         }
     }
 
 }
 
-void fillTable(Vector2 position){
-    for(int y = 0; y < gridHeight; y++){
-        for(int x = 0; x < gridWidth; x++){
-        }
-    }
-}
+
 
 void displayQuadraticCurves(){
     DrawTextEx(GetFontDefault(), "QUADRATIC CURVES", {10, 10}, 20, 2, RAYWHITE);
@@ -79,7 +91,6 @@ void displayQuadraticCurves(){
             Vector2 position = Vector2Lerp(Vector2Lerp(p1, p2, t), Vector2Lerp(p2, p3, t), t);
             Vector2 size = {10, 10};
             position = Vector2Subtract(position, Vector2Scale(size, 0.5));
-            fillTable(position);
             DrawRectangleV(position, size, BLUE);
         }
     }
