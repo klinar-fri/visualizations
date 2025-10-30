@@ -3,6 +3,7 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 vector<Vector2> points;
@@ -78,7 +79,6 @@ void displayPoints(){
 
 }
 
-
 void displayQuadraticCurves(){
     DrawTextEx(GetFontDefault(), "QUADRATIC CURVES", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
@@ -105,7 +105,6 @@ void displayQuadraticCurves(){
     }
 }
 
-
 void displayQubicCurves(){
     DrawTextEx(GetFontDefault(), "CUBIC CURVES", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
@@ -128,7 +127,7 @@ void displayQubicCurves(){
 
 void displayHelp(){
     Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
-    const char* str = "[LEFT mb] - click to add points\n[RIGHT mb] - connect line\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[H] - hide help";
+    const char* str = "[LEFT mb] - click to add points\nn[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
 
@@ -138,13 +137,17 @@ void displayH(){
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
 
+
+// This is the first approach by using the winding number alogrihtm.
+// To increase/decrease the winding based on the derivative of the curve.
+// I's not good as it only works in clockwise point position
 void displayFilledCurves(){
     DrawTextEx(GetFontDefault(), "SPLINE", {10, 10}, 20, 2, RAYWHITE);
 
     for(int row = 0; row < gridHeight; row++){
         int windingNum = 0;
         for(int col = 0; col < gridWidth; col++){
-            float x = (col + 0.5) * cellWidth;
+            // float x = (col + 0.5) * cellWidth;
             float y = (row + 0.5) * cellHeight;
             for(size_t i = 0; i + 2 <= points.size(); i+=2){
                 Vector2 p1 = points[i];
@@ -170,13 +173,12 @@ void displayFilledCurves(){
                 for(int j = 0; j < 2; j++){
                     if(!(0 <= t[j] && t[j] <= 1)) continue;
                     float tx = (dx23 - dx12)*t[j]*t[j] + 2*dx12*t[j] + p1.x;
-                    if(x < tx) continue;
-                    if(abs(tx - x) < cellWidth*0.5){
+                    if(col*cellWidth <= tx && tx <= (col + 1)*cellWidth){
                         // grid[row][col] = true;
                         float d = (dy23 - dy12)*t[j] + dy12;
                         if(d < 0){
                             windingNum += 1;
-                        }else if(d > 0){
+                        }else{
                             windingNum -= 1;
                         }
                     }
@@ -206,9 +208,116 @@ void displayFilledCurves(){
     }
 }
 
+typedef struct {
+   float tx;
+   float d; 
+} Solution;
+
+vector<Solution> solutions;
+
+int cmpSolutions(const void* s1, const void* s2){
+    const Solution* a = static_cast<const Solution*> (s1);
+    const Solution* b = static_cast<const Solution*> (s2);
+
+    if(a->tx < b->tx){
+        return -1;
+    }else if(a->tx > b->tx){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+
+void solveRow(int row, vector<Solution>& solutions){
+    solutions.clear();
+    float y = (row + 0.5) * cellHeight;
+    for(size_t i = 0; i + 2 <= points.size(); i+=2){
+        Vector2 p1 = points[i];
+        Vector2 p2 = points[i + 1];
+        Vector2 p3 = points[(i + 2)%points.size()];
+
+        float dx12 = p2.x - p1.x;
+        float dx23 = p3.x - p2.x;
+        float dy12 = p2.y - p1.y;
+        float dy23 = p3.y - p2.y;
+        
+        float a = dy23 - dy12;
+        float b = 2*dy12;
+        float c = p1.y - y;
+
+        float t[2];
+        int tn = 0;
+
+        if(abs(a) > 1e-6){
+            float D = b*b - 4*a*c;
+            if(D >= 0.0){
+                t[tn++] = (-b + sqrt(D)) / (2*a);
+                t[tn++] = (-b - sqrt(D)) / (2*a);
+            }
+        }else if(abs(b) > 1e-6){
+            t[tn++] = -c/b;
+        }
+
+        for(int j = 0; j < tn; j++){
+            if(!(0 <= t[j] && t[j] <= 1)) continue;
+            float tx = (dx23 - dx12)*t[j]*t[j] + 2*dx12*t[j] + p1.x;
+            float d = (dy23 - dy12)*t[j] + dy12;
+            Solution s = {tx, d};
+            solutions.push_back(s);
+        }
+    }
+    qsort(solutions.data(), solutions.size(), sizeof(Solution), cmpSolutions);
+}
+
+// Better option by iterating over the grid and solving the derivatives
+// for each x, then sort them by x
+void displayFilledCurvesImproved(){
+    DrawTextEx(GetFontDefault(), "SPLINE", {10, 10}, 20, 2, RAYWHITE);
+    for(size_t row = 0; row < gridHeight; row++){
+        for(size_t col = 0; col < gridWidth; col++){
+            grid[row][col] = false;
+        }
+    }
+    for(size_t row = 0; row < gridHeight; row++){
+        int windingNum = 0;
+        solveRow(row, solutions);
+        for(size_t i = 0; i < solutions.size(); i++){
+            Solution s = solutions[i];
+            if(windingNum > 0){
+                if(i > 0){
+                    Solution p = solutions[i - 1];
+                    size_t col1 = p.tx / cellWidth;
+                    size_t col2 = s.tx / cellWidth;
+                    for(size_t col = col1; col <= col2; col++){
+                        grid[row][col] = true;
+                    }
+                }
+            }
+            if(s.d < 0){
+                windingNum += 1;
+            }else if(s.d > 0){
+                windingNum -= 1;
+            }
+        }
+    }
+
+    for(int i = 0; i < gridHeight; i++){
+        for(int j = 0; j < gridWidth; j++){
+            if(grid[i][j]){
+                Vector2 markerPosition = {(float)j * cellWidth, (float)i * cellHeight};
+                Vector2 cellSize = {(float)cellWidth, (float)cellHeight};
+                Vector2 markerSize = Vector2Scale(cellSize, 0.4);
+                markerPosition = Vector2Add(markerPosition, Vector2Scale(cellSize, 0.5));
+                markerPosition = Vector2Subtract(markerPosition, Vector2Scale(markerSize, 0.5));
+                DrawRectangleV(markerPosition, markerSize, RED);
+            }
+        }
+    }
+}
+
 int main(){
 
-    SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE | FLAG_WINDOW_UNDECORATED);
+    // SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE | FLAG_WINDOW_UNDECORATED);
     InitWindow(windowWidth, windowHeight, "berzier curves");
     SetTargetFPS(60);
 
@@ -239,6 +348,11 @@ int main(){
             showQuadraticCurves = false;
             showQubicCurves = false;
             showAreaWithin = !showAreaWithin;
+            for(int y = 0; y < gridHeight; y++){
+                for(int x = 0; x < gridWidth; x++){
+                    grid[y][x] = false;
+                }
+            }
         }
         // undo last placement
         if(IsKeyPressed(KEY_U)){
@@ -258,7 +372,8 @@ int main(){
             }else if(showQubicCurves){
                 displayQubicCurves();
             }else if(showAreaWithin){
-                displayFilledCurves();
+                // displayFilledCurves();
+                displayFilledCurvesImproved();
             }
             if(showHelp){
                 displayHelp();
