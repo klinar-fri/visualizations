@@ -127,7 +127,7 @@ void displayQubicCurves(){
 
 void displayHelp(){
     Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
-    const char* str = "[LEFT mb] - click to add points\nn[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
+    const char* str = "[LEFT mb] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
 
