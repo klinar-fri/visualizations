@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "raymath.h"
+#include <math.h>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -8,8 +9,8 @@ vector<Vector2> points;
 int pointDragging = -1;
 
 // aspect ratio 4:3
-constexpr int heightFactor = 4;
-constexpr int widthFactor = 3;
+constexpr int heightFactor = 3;
+constexpr int widthFactor = 4;
 constexpr int windowSize = 200;
 
 constexpr int windowHeight = heightFactor * windowSize;
@@ -45,7 +46,7 @@ void displayPoints(){
     if (pointDragging == -1 && newPointToDrag != -1) {
         pointDragging = newPointToDrag;
     }
-    // Stop dragging: If a point is being dragged and the mouse button is released
+
     if (pointDragging >= 0 && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
         pointDragging = -1;
     }
@@ -78,18 +79,26 @@ void displayPoints(){
 }
 
 
-
 void displayQuadraticCurves(){
     DrawTextEx(GetFontDefault(), "QUADRATIC CURVES", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
-    for(size_t i = 0; i + 2 < points.size(); i += 2){
+    for(size_t i = 0; i + 2 <= points.size(); i += 2){
         Vector2 p1 = points[i];
         Vector2 p2 = points[i + 1];
-        Vector2 p3 = points[i + 2];
+        Vector2 p3 = points[(i + 2)%points.size()];
+
+        // float dx12 = p2.x - p1.x;
+        // float dx23 = p3.x - p2.x;
+        // float dy12 = p2.y - p1.y;
+        // float dy23 = p3.y - p2.y; 
+
         for(int j = 0; j <= n; j++){
             float t = (float) j / n;
             Vector2 position = Vector2Lerp(Vector2Lerp(p1, p2, t), Vector2Lerp(p2, p3, t), t);
             Vector2 size = {10, 10};
+            // float x = (dx23 - dx12)*t*t + 2*dx12*t + p1.x;
+            // float y = (dy23 - dy12)*t*t + 2*dy12*t + p1.y;
+            // Vector2 position = {x, y};
             position = Vector2Subtract(position, Vector2Scale(size, 0.5));
             DrawRectangleV(position, size, BLUE);
         }
@@ -130,10 +139,51 @@ void displayH(){
 }
 
 void displayFilledCurves(){
+    DrawTextEx(GetFontDefault(), "SPLINE", {10, 10}, 20, 2, RAYWHITE);
+    for(int row = 0; row < gridHeight; row++){
+        for(int col = 0; col < gridWidth; col++){
+            grid[row][col] = false;
+            float x = (col + 0.5) * cellWidth;
+            float y = (row + 0.5) * cellHeight;
+
+
+            for(size_t i = 0; i + 2 <= points.size(); i+=2){
+                Vector2 p1 = points[i];
+                Vector2 p2 = points[i + 1];
+                Vector2 p3 = points[(i + 2)%points.size()];
+
+                float dx12 = p2.x - p1.x;
+                float dx23 = p3.x - p2.x;
+                float dy12 = p2.y - p1.y;
+                float dy23 = p3.y - p2.y;
+                
+                float a = dy23 - dy12;
+                float b = 2*dy12;
+                float c = p1.y - y;
+                float D = b*b - 4*a*c;
+
+                if(D < 0.0) continue;
+
+                float t[2];
+                t[0] = (-b + sqrt(D)) / (2*a);
+                t[1] = (-b - sqrt(D)) / (2*a);
+
+                for(int j = 0; j < 2; j++){
+                    if(!(0 <= t[j] && t[j] <= 1)) continue;
+                    float tx = (dx23 - dx12)*t[j]*t[j] + 2*dx12*t[j] + p1.x;
+                    if(abs(tx - x) < cellWidth){
+                        grid[row][col] = true;
+                    }
+                    // float ty = (dy23 - dy12)*t*t + 2*dy12*t + p1.y;
+                }
+            }
+        }
+    }
+
     for(int i = 0; i < gridHeight; i++){
         for(int j = 0; j < gridWidth; j++){
             if(grid[i][j]){
-                Vector2 markerPosition = {(float)i*cellWidth, (float)j*cellHeight};
+                Vector2 markerPosition = {(float)j * cellWidth, (float)i * cellHeight};
                 Vector2 cellSize = {(float)cellWidth, (float)cellHeight};
                 Vector2 markerSize = Vector2Scale(cellSize, 0.4);
                 markerPosition = Vector2Add(markerPosition, Vector2Scale(cellSize, 0.5));
@@ -147,13 +197,13 @@ void displayFilledCurves(){
 int main(){
 
     SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE | FLAG_WINDOW_UNDECORATED);
-    InitWindow(windowHeight, windowWidth, "berzier curves");
+    InitWindow(windowWidth, windowHeight, "berzier curves");
     SetTargetFPS(60);
 
     bool showQuadraticCurves = false;
     bool showQubicCurves = false;
     bool showHelp = false;
-    bool showAreaWithinQuadratic = false;
+    bool showAreaWithin = false;
 
     while(!WindowShouldClose()){
         // F1 to clear the screen
@@ -161,17 +211,22 @@ int main(){
             points.clear();
             showQuadraticCurves = false;
             showQubicCurves = false;
+            showAreaWithin = false;
         }
         if(IsKeyPressed(KEY_F2)){
             showQuadraticCurves = !showQuadraticCurves;
             showQubicCurves = false;
+            showAreaWithin = false;
         }
         if(IsKeyPressed(KEY_F3)){
             showQuadraticCurves = false;
+            showAreaWithin = false;
             showQubicCurves = !showQubicCurves;
         }
         if(IsKeyPressed(KEY_F4)){
-            showAreaWithinQuadratic = !showAreaWithinQuadratic;
+            showQuadraticCurves = false;
+            showQubicCurves = false;
+            showAreaWithin = !showAreaWithin;
         }
         // undo last placement
         if(IsKeyPressed(KEY_U)){
@@ -185,14 +240,13 @@ int main(){
         }
         BeginDrawing();
             ClearBackground(GetColor(0x181818FF));
-            if(showAreaWithinQuadratic){
-                displayFilledCurves();
-            }
             displayPoints();
             if(showQuadraticCurves){
                 displayQuadraticCurves();
             }else if(showQubicCurves){
                 displayQubicCurves();
+            }else if(showAreaWithin){
+                displayFilledCurves();
             }
             if(showHelp){
                 displayHelp();
