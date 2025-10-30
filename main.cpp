@@ -140,13 +140,12 @@ void displayH(){
 
 void displayFilledCurves(){
     DrawTextEx(GetFontDefault(), "SPLINE", {10, 10}, 20, 2, RAYWHITE);
+
     for(int row = 0; row < gridHeight; row++){
+        int windingNum = 0;
         for(int col = 0; col < gridWidth; col++){
-            grid[row][col] = false;
             float x = (col + 0.5) * cellWidth;
             float y = (row + 0.5) * cellHeight;
-
-
             for(size_t i = 0; i + 2 <= points.size(); i+=2){
                 Vector2 p1 = points[i];
                 Vector2 p2 = points[i + 1];
@@ -171,11 +170,24 @@ void displayFilledCurves(){
                 for(int j = 0; j < 2; j++){
                     if(!(0 <= t[j] && t[j] <= 1)) continue;
                     float tx = (dx23 - dx12)*t[j]*t[j] + 2*dx12*t[j] + p1.x;
-                    if(abs(tx - x) < cellWidth){
-                        grid[row][col] = true;
+                    if(x < tx) continue;
+                    if(abs(tx - x) < cellWidth*0.5){
+                        // grid[row][col] = true;
+                        float d = (dy23 - dy12)*t[j] + dy12;
+                        if(d < 0){
+                            windingNum += 1;
+                        }else if(d > 0){
+                            windingNum -= 1;
+                        }
                     }
-                    // float ty = (dy23 - dy12)*t*t + 2*dy12*t + p1.y;
                 }
+
+
+            }
+            if(windingNum > 0){
+                grid[row][col] = true;
+            }else{
+                grid[row][col] = false;
             }
         }
     }
