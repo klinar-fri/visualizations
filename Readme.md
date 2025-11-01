@@ -41,4 +41,4 @@
     Note:<br>
     The math and code for quadratic berzier curves was inspired by this youtube video: [click](https://www.youtube.com/watch?v=1epwf3iaQNU),
     while the cubic berzier curves i have implemented by myself.<br> 
-    Both feature some bugs when rendering splines, make sure to place the control points in $\bold{ clockwise \space pattern!}$<br>
+    Both feature some bugs when rendering splines, make sure to place the control points in $clockwise \space pattern!$<br>
