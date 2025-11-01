@@ -327,6 +327,7 @@ void displayFilledCurvesImproved(){
     }
 }
 
+// AI generated section along with the results in the next function, since mine was way to buggy    
 /*---------------------------------------------------------------------------------------------------------------------*/
     // tolerance for comparing to 0 and for deduplicating roots
     static constexpr long double EPS = 1e-12L;
@@ -385,7 +386,7 @@ void solveRowCubic(int row, vector<Solution>& solutions){
 
         vector<long double> roots;
 
-        // handle degenerate: not cubic
+        // handle not cubic
         if (fabsl(a) < EPS) {
             roots = solve_quadratic_real(b, c, d);
         }
@@ -394,9 +395,6 @@ void solveRowCubic(int row, vector<Solution>& solutions){
         float maxY = std::max({p1.y, p2.y, p3.y, p4.y});
         if (y < minY || y > maxY) continue; // skip this segment
 
-        // cout << "Segment " << i/3
-        // << " y-range: [" << minY << ", " << maxY << "]"
-        // << " scan y=" << y << endl;
         
         // normalize: x^3 + A x^2 + B x + C = 0
         long double A = b / a;
@@ -453,84 +451,84 @@ void solveRowCubic(int row, vector<Solution>& solutions){
         roots = unique_sorted_real(real_roots, 1e-9L);   
 
         for(size_t j = 0; j < roots.size(); j++){
-            // cout << roots[j] << " ";
-            // if(j == roots.size() - 1){
-            //     cout << "\n";
-            // }
             if(!(0 <= roots[j] && roots[j] <= 1)) continue;
             float tx = (dx12 - 2*dx23 + dx34)*roots[j]*roots[j]*roots[j] - 3*roots[j]*roots[j]*(dx12 - dx23) + 3*dx12*roots[j] + p1.x;
             float d = 3*(dy12*(roots[j] - 1)*(roots[j] - 1) + roots[j]*(dy34*roots[j] - 2*dy23*(roots[j] - 1)));
-            // cout <<"Imamo resitev : [" << tx << " " << d << "]"<< endl;
+            // cout << "We have solution : [" << tx << " " << d << "]"<< endl;
             Solution s = {tx, d};
             solutions.push_back(s);
         }
 
     }
-        // float bn;
-        // float cn;
-        // float dn;
 
-    //     // normalze roots
-    //     if(abs(a) < 1e-6){
-    //         bn = b;
-    //         cn = c;
-    //         dn = d;
-    //     }else{
-    //         bn = b / a;
-    //         cn = c / a;
-    //         dn = d / a;
-    //     }
+    /* - Buggy code, cannot find the bug:
 
-    //     // depressed cubic substitution
-    //     float b_3 = bn / 3;
-    //     float p = cn - (bn * bn) / 3.0f;
-    //     float q = (2.0 * bn * bn * bn) / 27.0 - ((bn * cn) / 3.0) + dn;
+        float bn;
+        float cn;
+        float dn;
 
-    //     // discriminant
-    //     float disc = (q * q) / 4.0 + (p*p*p) / 27.0;
+        // normalze roots
+        if(abs(a) < 1e-6){
+            bn = b;
+            cn = c;
+            dn = d;
+        }else{
+            bn = b / a;
+            cn = c / a;
+            dn = d / a;
+        }
 
-    //     vector<float> tn;
-    //     if(disc < 1e-6) disc = 0.0;
+        // depressed cubic substitution
+        float b_3 = bn / 3;
+        float p = cn - (bn * bn) / 3.0f;
+        float q = (2.0 * bn * bn * bn) / 27.0 - ((bn * cn) / 3.0) + dn;
 
-    //     // One real solution
-    //     if(disc > 0.0){
-    //         float sqDisc = sqrt(disc);
-    //         float u = cbrt(-q / 2.0 + sqDisc);
-    //         float v = cbrt(-q / 2.0 - sqDisc);
-    //         float yn = u + v;
-    //         tn.push_back(yn - b_3);
-    //     }else if(disc == 0.0){
-    //         // Multiple solutions, at least a double
-    //         float u = cbrt(-q / 2.0);
-    //         float y1 = u * 2;
-    //         float y2 = -u;
-    //         tn.push_back(y1 - b_3);
-    //         tn.push_back(y2 - b_3);
+        // discriminant
+        float disc = (q * q) / 4.0 + (p*p*p) / 27.0;
 
-    //         // Remove duplicates within tolerance
-    //         sort(tn.begin(), tn.end());
-    //         tn.erase(unique(tn.begin(), tn.end(), [](float a, float b){return abs(a - b) < 1e-6;}), tn.end());
-    //     }else{
-    //         // Three distinct real roots (disc < 0)
-    //         double r = sqrt(-p * p * p / 27.0);
-    //         double phi = acos(clamp(-q / (2.0 * r), -1.0, 1.0));
-    //         double m = 2.0 * sqrt(-p / 3.0);
+        vector<float> tn;
+        if(disc < 1e-6) disc = 0.0;
 
-    //         tn.push_back(m * cos(phi / 3.0) - b_3);
-    //         tn.push_back(m * cos((phi + 2.0 * PI) / 3.0) - b_3);
-    //         tn.push_back(m * cos((phi + 4.0 * PI) / 3.0) - b_3);
-    //         sort(tn.begin(), tn.end());
-    //     }
+        // One real solution
+        if(disc > 0.0){
+            float sqDisc = sqrt(disc);
+            float u = cbrt(-q / 2.0 + sqDisc);
+            float v = cbrt(-q / 2.0 - sqDisc);
+            float yn = u + v;
+            tn.push_back(yn - b_3);
+        }else if(disc == 0.0){
+            // Multiple solutions, at least a double
+            float u = cbrt(-q / 2.0);
+            float y1 = u * 2;
+            float y2 = -u;
+            tn.push_back(y1 - b_3);
+            tn.push_back(y2 - b_3);
 
-    //     for(size_t j = 0; j < tn.size(); j++){
-    //         if(!(0 <= tn[j] && tn[j] <= 1)) continue;
-    //         float tx = (dx12 - 2*dx23 + dx34)*tn[j]*tn[j]*tn[j] - 3*tn[j]*tn[j]*(dx12 - dx23) + 3*dx12*tn[j] + p1.x;
-    //         float d = 3*(dy12*(tn[j] - 1)*(tn[j] - 1) + tn[j]*(dy34*tn[j] - 2*dy23*(tn[j] - 1)));
-    //         Solution s = {tx, d};
-    //         solutions.push_back(s);
-    //     }
-    // }
-    // qsort(solutions.data(), solutions.size(), sizeof(Solution), cmpSolutions);
+            // Remove duplicates within tolerance
+            sort(tn.begin(), tn.end());
+            tn.erase(unique(tn.begin(), tn.end(), [](float a, float b){return abs(a - b) < 1e-6;}), tn.end());
+        }else{
+            // Three distinct real roots (disc < 0)
+            double r = sqrt(-p * p * p / 27.0);
+            double phi = acos(clamp(-q / (2.0 * r), -1.0, 1.0));
+            double m = 2.0 * sqrt(-p / 3.0);
+
+            tn.push_back(m * cos(phi / 3.0) - b_3);
+            tn.push_back(m * cos((phi + 2.0 * PI) / 3.0) - b_3);
+            tn.push_back(m * cos((phi + 4.0 * PI) / 3.0) - b_3);
+            sort(tn.begin(), tn.end());
+        }
+
+        for(size_t j = 0; j < tn.size(); j++){
+            if(!(0 <= tn[j] && tn[j] <= 1)) continue;
+            float tx = (dx12 - 2*dx23 + dx34)*tn[j]*tn[j]*tn[j] - 3*tn[j]*tn[j]*(dx12 - dx23) + 3*dx12*tn[j] + p1.x;
+            float d = 3*(dy12*(tn[j] - 1)*(tn[j] - 1) + tn[j]*(dy34*tn[j] - 2*dy23*(tn[j] - 1)));
+            Solution s = {tx, d};
+            solutions.push_back(s);
+        }
+    }
+    qsort(solutions.data(), solutions.size(), sizeof(Solution), cmpSolutions); 
+    */
 }
 
 
