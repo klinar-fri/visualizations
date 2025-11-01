@@ -37,10 +37,8 @@
     a polinominal by expanding the lerp functions:<br>
     - $\{x, y\}$ $\rightarrow$ $t = (p_{12} + 2p_{23} + p_{34})t^3 + (-3p_{12} + 3p_{23})t^2 + 3p_{12}t + p_1$<br>
     - $dt = 3(p_{12}(t - 1)^2 + t(p_{34}t - 2p_{23}(t - 1)))$<br>
-
-<br>
-<br>
-&nbsp &nbsp &nbsp &nbsp &nbsp Note:<br>
-&nbsp &nbsp &nbsp &nbsp &nbsp The math and code for quadratic berzier curves was inspired by this youtube video: [click](https://www.youtube.com/watch?v=1epwf3iaQNU),<br>
-&nbsp &nbsp &nbsp &nbsp &nbsp while the cubic berzier curves were implemented by myself. 
-Both feature some bugs when rendering splines, make sure to place the control points in <bold>clockwise pattern!<bold>.<br>
+    
+    Note:<br>
+    The math and code for quadratic berzier curves was inspired by this youtube video: [click](https://www.youtube.com/watch?v=1epwf3iaQNU),
+    while the cubic berzier curves were implemented by myself.<br> 
+    Both feature some bugs when rendering splines, make sure to place the control points in <bold>clockwise pattern!<bold>.<br>
