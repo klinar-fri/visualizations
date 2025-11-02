@@ -148,7 +148,13 @@ void displayCubicCurves(){
 void displayHelp(){
     Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
     const char* str = "[LEFT mb] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - display polygons\n[F5] - display quadratic spline\n[F6] - display cubic spline\n[F7] - display filled polygon\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
+    const char* str2 = "Note: place control points for berzier curves in clockwise pattern!";
+    const char* str3 = "Made with <3 by JK";
+    Vector2 str2Size = MeasureTextEx(GetFontDefault(), "N", 10, 2);
+    Vector2 str3Size = MeasureTextEx(GetFontDefault(), str3, 10, 2);
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
+    DrawTextEx(GetFontDefault(), str2, {10, windowHeight - str2Size.y - 10}, 10, 2, RAYWHITE);
+    DrawTextEx(GetFontDefault(), str3, {800 - str3Size.x - 10, windowHeight - str3Size.y - 10}, 10, 2, RAYWHITE);
 }
 
 void displayH(){
@@ -581,7 +587,7 @@ void displayFilledCurvesCubic(){
 void displayPolygons(){
     DrawTextEx(GetFontDefault(), "POLYGONS", {10, 10}, 20, 2, RAYWHITE);
     int n = 20;
-    for(size_t i = 0; i+1 <= points.size(); i++){
+    for(size_t i = 0; i < points.size(); i++){
         Vector2 p1 = points[i];
         Vector2 p2 = points[(i + 1)%points.size()];
 
@@ -600,8 +606,49 @@ void displayPolygons(){
     }
 }
 
-void solveRowPoly(int row, vector<Solution> solutions){
+void solveRowPoly(int row, vector<Solution>& solutions){
+    solutions.clear();
+    float y = (row + 0.5) * cellHeight;
+    if(points.size() < 3){
+        int n = 20;
+        for(size_t i = 0; i < points.size(); i++){
+            Vector2 p1 = points[i];
+            Vector2 p2 = points[(i + 1)%points.size()];
 
+            float dx12 = p2.x - p1.x;
+            float dy12 = p2.y - p1.y;
+
+            for(int j = 0; j <= n; j++){
+                float t = (float) j / n;
+                float x = dx12*t + p1.x;
+                float y = dy12*t + p1.y;
+                Vector2 size = {10, 10};
+                Vector2 position = {x, y};
+                position = Vector2Subtract(position, Vector2Scale(size, 0.5));
+                DrawRectangleV(position, size, BLUE);
+            }
+        }
+        return;
+    }
+    for(size_t i = 0; i < points.size(); i++){
+        Vector2 p1 = points[i];
+        Vector2 p2 = points[(i + 1)%points.size()];
+        float dx12 = p2.x - p1.x;
+        float dy12 = p2.y - p1.y;
+
+        if(fabs(y) < 1e-6f) continue;
+
+
+        if((p1.y <= y && p2.y > y) || (p2.y <= y && p1.y > y)){
+            float t = (y - p1.y) / dy12;
+            float tx = dx12*t + p1.x;
+            float d = dy12;
+            // cout << tx << " " << d << endl;
+            solutions.push_back({tx, d});
+        }
+    }
+
+    qsort(solutions.data(), solutions.size(), sizeof(Solution), cmpSolutions);
 }
 
 void displayFilledPolygons(){
@@ -612,11 +659,32 @@ void displayFilledPolygons(){
         }
     }
     for(size_t row = 0; row < gridHeight; row++){
-        int windingNumber = 0;
         solveRowPoly(row, solutions);
-        for(size_t i = 0; i < solutions.size(); i++){
-            Solution s = solutions[i];
-            cout << s.tx << endl;
+        // cout << solutions.size() << endl;
+
+        for (size_t i = 0; i + 1 < solutions.size(); i += 2) {
+            int col1 = (int)(solutions[i].tx / cellWidth);
+            int col2 = (int)(solutions[i+1].tx / cellWidth);
+
+            col1 = std::clamp(col1, 0, gridWidth - 1);
+            col2 = std::clamp(col2, 0, gridWidth - 1);
+
+            for (int col = col1; col <= col2; ++col)
+                grid[row][col] = true;
+        }
+
+    }
+
+    for(int i = 0; i < gridHeight; i++){
+        for(int j = 0; j < gridWidth; j++){
+            if(grid[i][j]){
+                Vector2 markerPosition = {(float)j * cellWidth, (float)i * cellHeight};
+                Vector2 cellSize = {(float)cellWidth, (float)cellHeight};
+                Vector2 markerSize = Vector2Scale(cellSize, 0.4);
+                markerPosition = Vector2Add(markerPosition, Vector2Scale(cellSize, 0.5));
+                markerPosition = Vector2Subtract(markerPosition, Vector2Scale(markerSize, 0.5));
+                DrawRectangleV(markerPosition, markerSize, RED);
+            }
         }
     }
 }
