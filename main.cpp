@@ -27,6 +27,13 @@ constexpr int cellHeight = windowHeight / gridHeight;
 
 bool grid[gridHeight][gridWidth] = {0};
 
+typedef struct {
+   float tx;
+   float d; 
+} Solution;
+
+vector<Solution> solutions;
+
 void displayPoints(){
     Vector2 mouse = GetMousePosition();
     int newPointToDrag = -1;
@@ -140,7 +147,7 @@ void displayCubicCurves(){
 
 void displayHelp(){
     Vector2 strSize = MeasureTextEx(GetFontDefault(), "[F3] - display quadratic curves", 10, 2);
-    const char* str = "[LEFT mb] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - show area enclosed\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
+    const char* str = "[LEFT mb] - click to add points\n[F1] - clear screen\n[F2] - display quadratic curves\n[F3] - display qubic curves\n[F4] - display polygons\n[F5] - display quadratic spline\n[F6] - display cubic spline\n[F7] - display filled polygon\n[U] - undo point placement\n[ESC] - close the screen\n[H] - hide help";
     DrawTextEx(GetFontDefault(), str, {800 - strSize.x - 10, 10}, 10, 2, RAYWHITE);
 }
 
@@ -219,13 +226,6 @@ void displayFilledCurves(){
         }
     }
 }
-
-typedef struct {
-   float tx;
-   float d; 
-} Solution;
-
-vector<Solution> solutions;
 
 int cmpSolutions(const void* s1, const void* s2){
     const Solution* a = static_cast<const Solution*> (s1);
@@ -577,6 +577,50 @@ void displayFilledCurvesCubic(){
     }
 }
 
+
+void displayPolygons(){
+    DrawTextEx(GetFontDefault(), "POLYGONS", {10, 10}, 20, 2, RAYWHITE);
+    int n = 20;
+    for(size_t i = 0; i+1 <= points.size(); i++){
+        Vector2 p1 = points[i];
+        Vector2 p2 = points[(i + 1)%points.size()];
+
+        float dx12 = p2.x - p1.x;
+        float dy12 = p2.y - p1.y;
+
+        for(int j = 0; j <= n; j++){
+            float t = (float) j / n;
+            float x = dx12*t + p1.x;
+            float y = dy12*t + p1.y;
+            Vector2 size = {10, 10};
+            Vector2 position = {x, y};
+            position = Vector2Subtract(position, Vector2Scale(size, 0.5));
+            DrawRectangleV(position, size, BLUE);
+        }
+    }
+}
+
+void solveRowPoly(int row, vector<Solution> solutions){
+
+}
+
+void displayFilledPolygons(){
+    DrawTextEx(GetFontDefault(), "FILLED POLYGONS", {10, 10}, 20, 2, RAYWHITE);
+    for(size_t row = 0; row < gridHeight; row++){
+        for(size_t col = 0; col < gridWidth; col++){
+            grid[row][col] = false;
+        }
+    }
+    for(size_t row = 0; row < gridHeight; row++){
+        int windingNumber = 0;
+        solveRowPoly(row, solutions);
+        for(size_t i = 0; i < solutions.size(); i++){
+            Solution s = solutions[i];
+            cout << s.tx << endl;
+        }
+    }
+}
+
 int main(){
 
     // SetConfigFlags(FLAG_BORDERLESS_WINDOWED_MODE | FLAG_WINDOW_UNDECORATED);
@@ -585,9 +629,11 @@ int main(){
 
     bool showQuadraticCurves = false;
     bool showCubicCurves = false;
+    bool showPolygons = false;
     bool showHelp = false;
     bool showAreaWithinQuad = false;
     bool showAreaWithinCub = false;
+    bool showAreaWithinPolygon = false;
 
     while(!WindowShouldClose()){
         // F1 to clear the screen
@@ -597,36 +643,54 @@ int main(){
             showCubicCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
+            showPolygons = false;
         }else if(IsKeyPressed(KEY_F2)){
             showQuadraticCurves = !showQuadraticCurves;
             showCubicCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
+            showPolygons = false;
         }else if(IsKeyPressed(KEY_F3)){
             showQuadraticCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
+            showPolygons = false;
             showCubicCurves = !showCubicCurves;
-        }else if(IsKeyPressed(KEY_F4)){
+        }else if(IsKeyPressed(KEY_F5)){
             showQuadraticCurves = false;
             showCubicCurves = false;
             showAreaWithinCub = false;
+            showPolygons = false;
             showAreaWithinQuad = !showAreaWithinQuad;
             for(int y = 0; y < gridHeight; y++){
                 for(int x = 0; x < gridWidth; x++){
                     grid[y][x] = false;
                 }
             }
-        }else if(IsKeyPressed(KEY_F5)){
+        }else if(IsKeyPressed(KEY_F6)){
             showQuadraticCurves = false;
             showCubicCurves = false;
             showAreaWithinQuad = false;
+            showPolygons = false;
             showAreaWithinCub = !showAreaWithinCub;
             for(int y = 0; y < gridHeight; y++){
                 for(int x = 0; x < gridWidth; x++){
                     grid[y][x] = false;
                 }
             }
+        }else if(IsKeyPressed(KEY_F4)){
+            showQuadraticCurves = false;
+            showCubicCurves = false;
+            showAreaWithinQuad = false;
+            showAreaWithinCub = false;
+            showPolygons = !showPolygons;
+        }else if(IsKeyPressed(KEY_F7)){
+            showQuadraticCurves = false;
+            showCubicCurves = false;
+            showPolygons = false; 
+            showAreaWithinQuad = false;
+            showAreaWithinCub = false;
+            showAreaWithinPolygon = !showAreaWithinPolygon;
         }
         // undo last placement
         if(IsKeyPressed(KEY_U)){
@@ -649,6 +713,10 @@ int main(){
                 displayFilledCurvesCubic();
             }else if(showAreaWithinQuad){
                 displayFilledCurvesImproved();
+            }else if(showPolygons){
+                displayPolygons();
+            }else if(showAreaWithinPolygon){
+                displayFilledPolygons();
             }
             if(showHelp){
                 displayHelp();
