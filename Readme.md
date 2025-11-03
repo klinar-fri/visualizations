@@ -38,7 +38,24 @@
     - $\{x, y\}$ $\rightarrow$ $t = (p_{12} + 2p_{23} + p_{34})t^3 + (-3p_{12} + 3p_{23})t^2 + 3p_{12}t + p_1$<br>
     - $dt = 3(p_{12}(t - 1)^2 + t(p_{34}t - 2p_{23}(t - 1)))$<br>
     
+
+- ### Polygons
+    To display the polygons we use the same strategy as with the berzier curves.<br>
+    We just connect the control points by lines, using similar lerp functions:<br>
+    - $x = (p_2.x - p_1.x)t + p_1.x$
+    - $y = (p_2.y - p_1.y)t + p_1.y$
+    - point on the line is then $P=\{x,y\}$
+    - again we compute $t$ like this: $t = j / n$ where $j$ is the index and $n$ is the number of points.
+    
+    When rendering the filled polygon we transform the equation to solve it for $t$ in order to<br> 
+    get the $x$ coordinate based on the $y$ (row). The derivative, while included, is not important
+    as we are not dealing with curves.<br>
+    - $t = (y - p_1.y) / (p_2.y - p_1.y)$
+    - $x = (p_2.x - p_1.x) + p_1.x$ 
+
+
+    
     Note:<br>
-    The math and code for quadratic berzier curves was inspired by this youtube video: [click](https://www.youtube.com/watch?v=1epwf3iaQNU),
-    while the cubic berzier curves i have implemented by myself.<br> 
-    Both feature some bugs when rendering splines, make sure to place the control points in $clockwise \space pattern!$<br>
+    The math and code for quadratic berzier curves was inspired by this youtube video: [click](https://www.youtube.com/watch?v=1epwf3iaQNU)<br>
+    The cubic berzier curves and polygons i have implemented by myself.<br> 
+    Both feature some bugs when rendering splines, especially the cubic ones, make sure to place the control points in a $clockwise \space pattern!$<br>
