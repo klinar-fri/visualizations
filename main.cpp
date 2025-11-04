@@ -586,7 +586,7 @@ void displayFilledCurvesCubic(){
 
 void displayPolygons(){
     DrawTextEx(GetFontDefault(), "POLYGONS", {10, 10}, 20, 2, RAYWHITE);
-    int n = 20;
+    int n = windowWidth / 80;
     for(size_t i = 0; i < points.size(); i++){
         Vector2 p1 = points[i];
         Vector2 p2 = points[(i + 1)%points.size()];
@@ -712,23 +712,27 @@ int main(){
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
             showPolygons = false;
+            showAreaWithinPolygon = false;
         }else if(IsKeyPressed(KEY_F2)){
             showQuadraticCurves = !showQuadraticCurves;
             showCubicCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
             showPolygons = false;
+            showAreaWithinPolygon = false;
         }else if(IsKeyPressed(KEY_F3)){
             showQuadraticCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
             showPolygons = false;
+            showAreaWithinPolygon = false;
             showCubicCurves = !showCubicCurves;
         }else if(IsKeyPressed(KEY_F5)){
             showQuadraticCurves = false;
             showCubicCurves = false;
             showAreaWithinCub = false;
             showPolygons = false;
+            showAreaWithinPolygon = false;
             showAreaWithinQuad = !showAreaWithinQuad;
             for(int y = 0; y < gridHeight; y++){
                 for(int x = 0; x < gridWidth; x++){
@@ -740,6 +744,7 @@ int main(){
             showCubicCurves = false;
             showAreaWithinQuad = false;
             showPolygons = false;
+            showAreaWithinPolygon = false;
             showAreaWithinCub = !showAreaWithinCub;
             for(int y = 0; y < gridHeight; y++){
                 for(int x = 0; x < gridWidth; x++){
@@ -751,6 +756,7 @@ int main(){
             showCubicCurves = false;
             showAreaWithinQuad = false;
             showAreaWithinCub = false;
+            showAreaWithinPolygon = false;
             showPolygons = !showPolygons;
         }else if(IsKeyPressed(KEY_F7)){
             showQuadraticCurves = false;
