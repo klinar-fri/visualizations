@@ -45,12 +45,12 @@
     - $x = (p_2.x - p_1.x)t + p_1.x$
     - $y = (p_2.y - p_1.y)t + p_1.y$
     - point on the line is then $P=\{x,y\}$
-    - again we compute $t$ like this: $t = j / n$ where $j$ is the index and $n$ is the number of points.
+    - again we compute $t$ like this: $t = \frac j n$ where $j$ is the index and $n$ is the number of points.
     
     When rendering the filled polygon we transform the equation to solve it for $t$ in order to<br> 
     get the $x$ coordinate based on the $y$ (row). The derivative, while included, is not important
     as we are not dealing with curves.<br>
-    - $t = (y - p_1.y) / (p_2.y - p_1.y)$
+    - $t = \frac {(y - p_1.y)} {(p_2.y - p_1.y)}$
     - $x = (p_2.x - p_1.x) + p_1.x$ 
 
 
