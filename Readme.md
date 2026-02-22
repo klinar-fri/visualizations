@@ -1,4 +1,7 @@
 # Visualization of Berzier Curves in Raylib
+
+[![SimulationVideo]](https://github.com/user-attachments/assets/374c9638-d994-4125-8801-e5601b5e3e83)
+
 - ### Quadratic berzier curves:<br>
     A Bézier curvex is a parametric curve used in computer graphics and related fields.<br>
     A set of discrete "control points" defines a smooth, continuous curve by means of a formula. <br>
